@@ -2,6 +2,8 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import pandas as pd
 from flask import session
+import glob
+import re
 
 #from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 #factory = StemmerFactory()
@@ -21,11 +23,36 @@ images_dir = os.path.join(static_dir, 'images')
 instagram_dir = os.path.join(os.getcwd(), 'instagram')
 
 class Clean():
-  def __init__(self, target):
+  def __init__(self, target, from_date, to_date):
     self.target_dir = os.path.join(instagram_dir, target)
     self.target = target
     self.target_images_dir = os.path.join(images_dir, target)
     self.arg = pd.read_csv(os.path.join(self.target_dir, f"{target}.csv"))
+    self.arg['Date'] = pd.to_datetime(self.arg['Date'])
+    try:
+      self.arg = self.arg[(self.arg['Date'] >= from_date) & (self.arg['Date'] <= to_date)]
+    except:
+      print('dataframe is not found')
+
+  def get_images_list(self):
+    pattern = r'UTC_[1-9]\.jpg$'
+    file_list = glob.glob(os.path.join(self.target_dir, '*.jpg'))
+    result = [item for item in file_list if re.search(pattern, item)]
+    return result
+
+  def filter_images(self):
+    file_list = self.get_images_list()
+    file_list = [x.split('/')[-1] for x in file_list]
+    file_list = [x[:19] for x in file_list]
+    file_list = [f"{s.split('_')[0]} {s.split('_')[1].replace('-', ':')}" for s in file_list]
+    file_list = list(set(file_list))
+
+    temp_df = self.arg.copy()
+    temp_df = temp_df[temp_df["Date"].isin(file_list)]
+    
+    self.arg = temp_df
+    return
+
 
   def character(self):
     self.arg['final']=self.arg['final'].str.replace('(?:\@|https?\://)\S+', '')
@@ -79,11 +106,12 @@ class Clean():
     return final_df
   
   def clean_auto(self):
+    self.filter_images()
     self.arg = self.character()
     self.arg = self.slang()
     self.arg[['likes','comments']] = self.arg[['likes','comments']].astype('int')
     self.arg = self.arg[['Date','final','likes','comments','url']]
-    self.arg.to_csv(os.path.join(self.target_dir, f"{self.target}.csv"), index=False)
+    #self.arg.to_csv(os.path.join(self.target_dir, f"{self.target}.csv"), index=False)
     self.arg.to_csv(os.path.join(self.target_dir, f"{self.target}_final.csv"), index=False)
     self.generate_cloud_words()
     return self.arg

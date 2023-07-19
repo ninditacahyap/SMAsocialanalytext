@@ -18,11 +18,35 @@ import rq
 from rq.job import Job
 import time
 import glob
+from datetime import datetime
+
+indonesian_months = {
+    1: 'Januari',
+    2: 'Februari',
+    3: 'Maret',
+    4: 'April',
+    5: 'Mei',
+    6: 'Juni',
+    7: 'Juli',
+    8: 'Agustus',
+    9: 'September',
+    10: 'Oktober',
+    11: 'November',
+    12: 'Desember'
+}
 
 r = Redis.from_url('redis://')
 
 app = Flask(__name__)
 app.secret_key = "super secret key"
+
+def format_input_date(date):
+    date_object = datetime.strptime(date, '%Y-%m-%d')
+    day = date_object.day
+    month = indonesian_months[date_object.month]
+    year = date_object.year
+    formatted_date = f'{day} {month} {year}'
+    return formatted_date
 
 @app.route('/', methods=["GET"])
 def index():
@@ -37,20 +61,27 @@ def scrapping():
 
     if request.method == 'POST':
         instagram = request.form.get('instagram')
-        # dari = request.form.get('dari').split('/')
-        # hingga = request.form.get('hingga').split('/')
-        # from_date = [int(dari[2]), int(dari[0]), int(dari[1])]
-        # to_date = [int(hingga[2]), int(hingga[0]), int(hingga[1])]
+        dari = request.form.get('dari').split('/')
+        hingga = request.form.get('hingga').split('/')
+        print(dari, hingga)
+        from_date = [int(dari[2]), int(dari[0]), int(dari[1])]
+        to_date = [int(hingga[2]), int(hingga[0]), int(hingga[1])]
 
-        # _, job = get_fetch_job(instagram, from_date, to_date)
-        # _, clean_job = clean_rq(target=instagram, depend=job)
-        # return redirect(url_for('cleaning', instagram=instagram, index=0, id=clean_job.id, refresh=False))
-        return redirect(url_for('process_clean', instagram=instagram))
+        session['from_date'] = format_input_date('-'.join([str(x) for x in from_date]))
+        session['to_date'] = format_input_date('-'.join([str(x) for x in to_date]))
 
-@app.route('/process-clean/<string:instagram>')
-def process_clean(instagram):
-    _, job = clean_rq(instagram)
-    return redirect(url_for('cleaning', index=0, instagram=instagram, id=job.id))
+        format_from_date = '-'.join([str(x) for x in from_date])
+        format_to_date = '-'.join([str(x) for x in to_date])
+
+        _, job = get_fetch_job(instagram, from_date, to_date)
+        _, clean_job = clean_rq(target=instagram, from_date=format_from_date, to_date=format_to_date, depend=job)
+        return redirect(url_for('cleaning', instagram=instagram, from_date=from_date, to_date=to_date, index=0, id=clean_job.id, refresh=False))
+        # return redirect(url_for('process_clean', instagram=instagram, from_date=format_from_date, to_date=format_to_date))
+
+@app.route('/process-clean/<string:instagram>/<string:from_date>/<string:to_date>')
+def process_clean(instagram, from_date, to_date):
+    _, job = clean_rq(instagram, from_date, to_date)
+    return redirect(url_for('cleaning', index=0, instagram=instagram,  id=job.id, from_date=from_date, to_date=to_date))
 
 # @app.route('/clean/<string:instagram>', methods=['GET', 'POST'])
 # def clean(instagram):
@@ -68,9 +99,9 @@ def process_clean(instagram):
 #         wordcloud_images = url_for('static', filename= f'images/{instagram}/wordcloud_{instagram}.png', instagram=instagram)
 #         return redirect(url_for('clean', instagram=instagram, wordcloud=wordcloud_images))
 
-@app.route('/cleaning/<string:instagram>/<string:id>/<int:index>', methods=['GET', 'POST'])
-def cleaning(instagram, id, index):
-    clean = Clean(instagram)
+@app.route('/cleaning/<string:instagram>/<string:from_date>/<string:to_date>/<string:id>/<int:index>', methods=['GET', 'POST'])
+def cleaning(instagram, from_date, to_date, id, index):
+    clean = Clean(instagram, from_date, to_date)
     topic_url = url_for('process_topic', instagram=instagram)
     if request.method == 'GET':
         job = Job.fetch(id, connection=r)
@@ -90,7 +121,7 @@ def cleaning(instagram, id, index):
         list_hapus = hapus.replace(' ', '').split(',')
         clean.clean_manual(list_hapus)
         wordcloud_images = url_for('static', filename= f'images/{instagram}/wordcloud_{instagram}.png', instagram=instagram)
-        return redirect(url_for('cleaning', index=index+1, instagram=instagram, id=id, refresh=False, wordcloud=wordcloud_images))
+        return redirect(url_for('cleaning', index=index+1, instagram=instagram, from_date=from_date, to_date=to_date, id=id, refresh=False, wordcloud=wordcloud_images))
 
 @app.route('/process-topic/<string:instagram>')
 def process_topic(instagram):
@@ -135,13 +166,15 @@ def analytics(instagram, n_topics, id):
             return render_template('index.html')
         elif status == 'finished':
             scripts, div, topic_cloud_list, topic_colors_list = job.result
+            from_date = session.get('from_date')
+            to_date = session.get('to_date')
             kwargs = {'scripts': scripts,
             'ept': div['ept'],
             'cph': div['cph'],
             'cpt': div['cpt'],
             'p': div['p'],
             'cpd': div['cpd']}
-            return render_template('contentAnalysis.html', refresh=False, instagram=instagram, topic_cloud_list=topic_cloud_list, topic_colors_list=topic_colors_list, **kwargs)
+            return render_template('contentAnalysis.html', refresh=False, instagram=instagram, topic_cloud_list=topic_cloud_list, topic_colors_list=topic_colors_list, from_date=from_date, to_date=to_date, **kwargs)
 
 if __name__ == '__main__':
     app.run()

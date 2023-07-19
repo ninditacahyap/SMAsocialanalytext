@@ -27,6 +27,13 @@ stopword = factory.create_stop_word_remover()
 
 nltk.download('stopwords')
 
+accounts = [
+  ['daslim_virgo12', '123098abc'],
+  ['jejakproses', 'Berprosesbertumbuh'],
+  ['cobacoba7320', 'cobacoba0'],
+  ['buatsmanalytics', 'cobacoba1']
+]
+
 '''
 # proxy
 proxy_username = 'cadizsw191199'
@@ -50,10 +57,29 @@ class InstaScrapper():
 
   # instagram username and password
   
-  def login(self, username="cobacoba7320", password="cobacoba0"):
+  def login(self):
     # username = username
     # password = password
-    self.L.login(username, password)
+    for acc in accounts:
+      try:
+        self.L.login(acc[0], acc[1])
+        break
+      except instaloader.exceptions.TooManyRequestsException:
+        print('login failed')
+        continue
+
+  def get_current_df_date(self, target, since, until):
+    try:
+      df = pd.read_csv(target)
+      df['Date'] = pd.to_datetime(df['Date'])
+
+      filtered_df = df[(df['Date'] >= since) & (df['Date'] <= until)]
+      date_list = filtered_df['Date'].to_list()
+      date_list = [x.to_pydatetime() for x in date_list]
+      return date_list
+    except:
+      return []
+
 
   def fetch_ig(self,target, since=None, until=None):
     self.target = target
@@ -67,24 +93,30 @@ class InstaScrapper():
       if SINCE < UNTIL:
         SINCE, UNTIL = UNTIL, SINCE
       print('here')
+      
+      filtered_dates = self.get_current_df_date(os.path.join(self.target_dir, f"{self.target}.csv"), f"{since[0]}-{since[1]}-{since[2]}", f"{until[0]}-{until[1]}-{until[2]}")
+
       for post in takewhile(lambda p: p.date > UNTIL, dropwhile(lambda p: p.date > SINCE, posts)):
         print("qqq",post.date)
-        fmt_date = (str(post.date)).replace(' ','_').replace(':','-')
-        
-        self.final_df[fmt_date] = []
-        
-        try:
-          self.L.download_post(post, target)
-          target_txt = glob.glob(f"{self.target_dir}/{fmt_date}*UTC.txt")
-          target_pic = glob.glob(f"{self.target_dir}/{fmt_date}*.jpg")
-          x = threading.Thread(target=self.get_likes_comments_df, args=(target_txt,fmt_date,))
-          y = threading.Thread(target=self.get_images_text_df, args=(target_pic,fmt_date,))
-          threads.append(x)
-          threads.append(y)
-          x.start()
-          y.start()
-        except:
-          print("Error occured")
+        if post.date in filtered_dates:
+          print(f"{post.date} are already exist")
+          continue
+        else: 
+          fmt_date = (str(post.date)).replace(' ','_').replace(':','-')
+          self.final_df[fmt_date] = []
+
+          try:
+            self.L.download_post(post, target)
+            target_txt = glob.glob(f"{self.target_dir}/{fmt_date}*UTC.txt")
+            target_pic = glob.glob(f"{self.target_dir}/{fmt_date}*.jpg")
+            x = threading.Thread(target=self.get_likes_comments_df, args=(target_txt,fmt_date,))
+            y = threading.Thread(target=self.get_images_text_df, args=(target_pic,fmt_date,))
+            threads.append(x)
+            threads.append(y)
+            x.start()
+            y.start()
+          except:
+            print("Error occured")
     else: 
       for post in posts:
         print("zzz",post.date)
@@ -168,7 +200,12 @@ class InstaScrapper():
       final_df = pd.concat(res)
       final_df['final'] = final_df['text1'].astype(str) + " " + final_df['text2'].astype(str) + " "  + final_df['text3'].astype(str) + " "  + final_df['text4'].astype(str) + " "  + final_df['text5'].astype(str) + " "  + final_df['text6'].astype(str) + " "  + final_df['text7'].astype(str) + " "  + final_df['text8'].astype(str) + " "  + final_df['text9'].astype(str) + " "  + final_df['caption'].astype(str)
       final_df = final_df[['Date', 'final', 'likes', 'comments', 'url']]
-      final_df.to_csv(os.path.join(self.target_dir, f"{self.target}.csv"))
+      try:
+        cur_df = pd.read_csv(os.path.join(self.target_dir, f"{self.target}.csv"))
+        merged_df = cur_df.merge(final_df, on='Date')
+        merged_df.to_csv(os.path.join(self.target_dir, f"{self.target}.csv"))
+      except:
+        final_df.to_csv(os.path.join(self.target_dir, f"{self.target}.csv"))
     else:
       try:
         final_df = pd.read_csv(os.path.join(self.target_dir, f"{self.target}.csv"))

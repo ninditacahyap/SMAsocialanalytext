@@ -83,7 +83,7 @@
           untuk akun instagram
           <span class="font-medium">@{{ instagram }}</span> dengan periode
           konten dari tanggal
-          <span class="font-medium">1 Januari 2023 hingga 1 April 2023</span>
+          <span class="font-medium">{{ from_date }} hingga {{ to_date }}</span>
         </h1>
       </div>
       <!-- <div class="mt-8 bg-white shadow-xl p-5 rounded-2xl">
@@ -159,11 +159,11 @@
                               <img src="{{ url_for('static', filename='images/' + image) }}" alt="" />
                               <div class="flex justify-center">
                                 <div class="flex mx-2 mt-2">
-                                  <img src="images/icon-love.svg" alt="" />
+                                  <img src="{{ url_for('static', filename='images/icon-love.svg') }}" alt="like" />
                                   <span class="ml-1">{{like }}</span>
                                 </div>
                                 <div class="flex mx-2 mt-2">
-                                  <img src="images/icon-comment.svg" alt="" />
+                                  <img src="{{ url_for('static', filename='images/icon-comment.svg') }}" alt="comment" />
                                   <span class="ml-1">{{comment}}</span>
                                 </div>
                               </div>
@@ -451,11 +451,7 @@
                   <hr />
                 </div>
                 <div class="mt-[40] px-4">
-                  <span class="font-semibold text-md">Strategi Unggah Konten</span>
-                  <br />
-                  <span class="text-[#7d7d7d] text-sm">Hari dan waktu unggah konten
-                  </span>
-                  <p class="font-medium text-sm italic mt-8">
+                  <p class="font-medium text-sm mt-8">
                     Hari Unggah Konten
                   </p>
                   <span class="text-[#7d7d7d] text-sm">Hari unggah konten paling banyak pada masing-masing topik
@@ -477,7 +473,7 @@
                     {{ cpd|safe }}
                   </div>
                   {% endif %}
-                  <p class="font-medium text-sm italic mt-8">
+                  <p class="font-medium text-sm mt-8">
                     Waktu Unggah Konten
                   </p>
                   <span class="text-[#7d7d7d] text-sm">Waktu unggah konten paling banyak pada masing-masing

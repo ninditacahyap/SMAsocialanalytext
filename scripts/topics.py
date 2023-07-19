@@ -30,7 +30,7 @@ from nltk.util import trigrams
 from bokeh.io import push_notebook, show, output_notebook
 from bokeh.layouts import row
 from bokeh.plotting import figure
-from bokeh.palettes import d3
+from bokeh.palettes import d3, brewer
 from bokeh.transform import factor_cmap
 from bokeh.layouts import layout
 from bokeh.embed import components
@@ -138,7 +138,7 @@ class TopicModelling():
     plt.plot(x, self.coherence_values)
     plt.xlabel('Num Topics')
     plt.ylabel('Coherence score')
-    plt.legend(('coherence_values'), loc='best')
+    plt.legend(['Tingkat kematangan topik'], loc='best')
     plt.savefig(os.path.join(self.target_images_dir, f"coherence_{self.target}.png"), dpi=300, bbox_inches='tight')
     return top_coherence + 2
 
@@ -269,17 +269,18 @@ class TopicModelling():
     cat = self.engagement_check(df)
     cat.to_csv(os.path.join(self.target_dir, f"{self.target}_cat.csv"), index=False)
     # Preparation
-    d3 = d3
     topic_count = df['Dominant_Topic'].nunique()
     if topic_count > 2:
-      color = d3['Category20'][topic_count]
+      color = list(brewer['Set3'][topic_count])
+      color[1] = '#bc80bd'
+      color = tuple(color)
     else:  
-      color = ('#1f77b4', '#aec7e8')
+      color = ('#8dd3c7', '#bc80bd')
 
     df.to_csv(os.path.join(self.target_dir, f"{self.target}_topic.csv"), index=False)
 
     # Engagement Per Topic
-    cat['Dominant_Topic'] = cat['Dominant_Topic'].map(lambda x: 'Topic No {}'.format(x))
+    cat['Dominant_Topic'] = cat['Dominant_Topic'].map(lambda x: 'Topic No {}'.format(int(x)+1))
     keywords = cat['Dominant_Topic']
     engagement = cat.Engagement
     print(keywords)
@@ -287,10 +288,10 @@ class TopicModelling():
 
     source = cat
 
-    ept = figure(x_range=keywords,width=750, height=600, toolbar_location=None, title="Engagement Per Topic", sizing_mode='scale_width')
+    ept = figure(x_range=keywords,width=750, height=600, toolbar_location=None, title="Engagement per Topik", sizing_mode='scale_width', x_axis_label="topik", y_axis_label="engagement")
     ept.vbar(x='Dominant_Topic', top='Engagement', width=0.9, source=source, legend_field="Dominant_Topic",
-          line_color='white', fill_color=factor_cmap('Keywords', palette=color,
-                            factors=sorted(cat.Keywords.unique())))
+          line_color='white', fill_color=factor_cmap('Dominant_Topic', palette=color,
+                            factors=sorted(cat.Dominant_Topic.unique())))
 
     ept.xgrid.grid_line_color = None
     ept.y_range.start = 0
@@ -303,10 +304,10 @@ class TopicModelling():
 
     #source = cat
 
-    cpt = figure(x_range=keywords,width=750, height=600, toolbar_location=None, title="Count Per Topic", sizing_mode='scale_width')
+    cpt = figure(x_range=keywords,width=750, height=600, toolbar_location=None, title="Banyak Konten per Topik", sizing_mode='scale_width', x_axis_label="topik", y_axis_label="total konten")
     cpt.vbar(x='Dominant_Topic', top='Count', width=0.9, source=source, legend_field="Dominant_Topic",
-          line_color='white', fill_color=factor_cmap('Keywords', palette=color,
-                            factors=sorted(cat.Keywords.unique())))
+          line_color='white', fill_color=factor_cmap('Dominant_Topic', palette=color,
+                            factors=sorted(cat.Dominant_Topic.unique())))
 
     cpt.xgrid.grid_line_color = None
     cpt.y_range.start = 0
@@ -315,7 +316,7 @@ class TopicModelling():
     p = figure(plot_width=1500, plot_height=600, title = "Persebaran Konten",x_axis_type="datetime", sizing_mode='scale_width')
     p.scatter('Date','engagement',source=df,fill_alpha=1, fill_color=factor_cmap('Keywords', palette=color,
                             factors=sorted(cat.Keywords.unique())),size=10,legend='Dominant_Topic')
-    p.xaxis.axis_label = 'Date'
+    p.xaxis.axis_label = 'tanggal'
     p.yaxis.axis_label = 'engagement'
     p.legend.location = "top_left"
     p.legend.visible=False
@@ -332,14 +333,14 @@ class TopicModelling():
     Topics = sorted((df.Title.unique()))
     Topic = sorted((df.Keywords.unique()))
     Day = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
-    cpd = figure(x_range=Day, width=750, height=600, title="Count per Day",
+    cpd = figure(x_range=Day, width=750, height=600, title="Unggah Konten per Hari",
               toolbar_location=None, tools="", sizing_mode='scale_width')
 
     cpd.vbar_stack(Topic, x='Day Name', width=0.9, color=color, source=group_cpd,
                 legend_label=Topics)
 
-    cpd.xaxis.axis_label = 'Day'
-    cpd.yaxis.axis_label = 'Count'
+    cpd.xaxis.axis_label = 'hari'
+    cpd.yaxis.axis_label = 'total konten'
     cpd.x_range.range_padding = 0.1
     cpd.legend.visible=False
 
@@ -352,14 +353,14 @@ class TopicModelling():
 
     Hour = ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24']
 
-    cph = figure(x_range=Hour, width=750, height=600, title="Count per hour",
+    cph = figure(x_range=Hour, width=750, height=600, title="Unggah Konten per Jam",
               toolbar_location=None, tools="", sizing_mode='scale_width')
 
     cph.vbar_stack(Topic, x='Hour', width=0.9, color=color, source=group_cph,
                 legend_label=Topics)
 
-    cph.xaxis.axis_label = 'Hour'
-    cph.yaxis.axis_label = 'Count'
+    cph.xaxis.axis_label = 'jam (format 24 jam)'
+    cph.yaxis.axis_label = 'total konten'
     cph.x_range.range_padding = 0.1
     cph.legend.visible=False
 
@@ -379,13 +380,15 @@ class TopicModelling():
     # height = j*10
     i=0
 
+    topics_thread = []
+
     for t in cat.Keywords:
       fig, ax = plt.subplots(1, 2, figsize=(20,10))
 
       long_string = ','.join(list(df['Text'].astype('string')[df['Keywords'] == t].values))
 
       # Create a WordCloud object
-      wordcloud = WordCloud(width=1600, height=800, background_color="white", max_words=200, contour_width=3, contour_color='steelblue')
+      wordcloud = WordCloud(width=1600, height=1200, background_color="white", max_words=200, contour_width=3, contour_color='steelblue')
 
       # Generate a word cloud
       wordcloud = wordcloud.generate(long_string)
@@ -393,29 +396,35 @@ class TopicModelling():
       # Visualize the word cloud
       ax[0].imshow(wordcloud, interpolation="bilinear")
       ax[0].title.set_text("Word Cloud for Topic Topic #" +str(i+1))
+      ax[0].set_xticks([])
+      ax[0].set_yticks([])
 
       cnt = Counter()
       for text_all in df['Text'][df['Keywords'] == t].values:
           for word in str(text_all).split():
               cnt[word] += 1
       nilai = cnt.most_common(10)
+      nilai_4 = cnt.most_common(4)
+      topics_thread.append([x[0].replace("'", '').replace(',', '') for x in nilai_4])
       word = pd.DataFrame(nilai, columns = ['Words', 'Count'])
       word = word.sort_values(by="Count", ascending=True)
       ax[1].barh("Words", "Count", data=word)
       ax[1].title.set_text("Frequent Word for Topic #" +str(i+1))
+      ax[1].tick_params(axis='y', labelsize=14)
 
       fig.savefig(os.path.join(self.target_images_dir, f"topic_cloud_{self.target}_{i}.png"), dpi=300, bbox_inches='tight')
       i+=1
 
     topic_cloud_list = self.get_all_topic_images(self.target_images_dir, f"topic_cloud_{self.target}_*")
     topic_cloud_list.sort()
-    topics_thread = self.get_topics_thread(cat)
+    # topics_thread = self.get_topics_thread(cat)
     topics_images_list = self.get_engagement_images(df)
     topics_likes_list = self.get_engagement_likes(df)
     topics_comments_list = self.get_engagement_comments(df)
     topic_cloud_list = list(enumerate(zip(topics_thread, topic_cloud_list, topics_likes_list, topics_comments_list, topics_images_list)))
 
-   
+
+    print(color)   
 
     topic_colors_list = self.get_topic_colors(cat, color)
 

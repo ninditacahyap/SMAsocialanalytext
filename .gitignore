@@ -5,3 +5,4 @@ __pycache__
 *.zip
 /socmedanalysis-fe
 /temp
+.devcontainer

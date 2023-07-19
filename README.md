@@ -36,7 +36,7 @@ Setelah virtual environment aktif, barulah disini kita akan menginstall semua li
 ### libGl
 libGl adalah library yang nantinya akan di gunakan oleh OpenCV untuk menganalisa file photo.
 
-Cara instalasi cukup dengan mengetikkan `sudo apt install libgl1-mesa-glx` di terminal(linux).
+Cara instalasi cukup dengan mengetikkan `sudo apt install libgl1-mesa-glx -y` di terminal(linux).
 **Note**: saat ini kebanyakan library open sources hanya tersedia untuk linux.
 
 

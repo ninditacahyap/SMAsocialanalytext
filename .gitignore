@@ -1,8 +1,0 @@
-venv
-dump.rdb
-*.pyc
-__pycache__
-*.zip
-/socmedanalysis-fe
-/temp
-.devcontainer

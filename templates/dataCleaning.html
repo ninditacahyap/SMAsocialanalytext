@@ -1,0 +1,153 @@
+<html>
+
+<head>
+  <title>Socmed Analysis</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  {% if refresh %}
+    <meta http-equiv="refresh" content="5">
+  {% endif %}
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.2.3/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body class="bg-[#f9f9f9]">
+  <div class="h-auto pb-[50] m-auto">
+    <!-- Navbar -->
+    <nav class="bg-[#342A97] fixed w-full z-20 top-0 left-0 border-b border-gray-200 dark:border-gray-600">
+      <div class="flex items-center justify-between mx-auto p-3 w-full md:w-[700]">
+        <a href="/" class="flex items-center">
+          <img src="{{ url_for('static', filename='images/Logo.png') }}" class="h-[44] mr-3" alt="Flowbite Logo" />
+        </a>
+        <div class="flex md:order-2">
+          <div class="flex justify-end">
+            <a href="index.html"><i class="fa-solid fa-right-from-bracket text-white text-lg"></i>
+              <span class="text-white text-base pl-1">Keluar</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Stepper -->
+    <div class="mt-[80] p-5">
+      <div class="m-auto w-auto sm:w-[600] p-4">
+        <div class="flex items-center">
+          <div class="flex items-center text-teal-600 relative">
+            <div
+              class="rounded-full transition duration-500 ease-in-out h-5 w-5 border-2 border-[#342A97] bg-[#342A97]">
+            </div>
+            <div
+              class="absolute top-0 -ml-auto md:-ml-12 text-left md:text-center mt-10 w-auto md:w-32 text-xs font-medium text-[#342A97]">
+              Pengumpulan Data
+            </div>
+          </div>
+          <div class="flex-auto border-t-2 transition duration-500 ease-in-out border-[#342A97]"></div>
+          <div class="flex items-center text-white relative">
+            <div class="rounded-full transition duration-500 ease-in-out h-5 w-5 border-2 border-[#342A97]"></div>
+            <div
+              class="absolute top-0 -ml-auto md:-ml-12 text-left md:text-center mt-10 w-auto md:w-32 text-xs font-medium text-[#342A97]">
+              Pembersihan Data
+            </div>
+          </div>
+          <div class="flex-auto border-t-2 transition duration-500 ease-in-out border-gray-300"></div>
+          <div class="flex items-center text-gray-500 relative">
+            <div class="rounded-full transition duration-500 ease-in-out h-5 w-5 border-2 border-gray-300"></div>
+            <div
+              class="absolute top-0 -ml-auto md:-ml-12 text-left md:text-center mt-10 w-auto md:w-32 text-xs font-regular text-gray-400">
+              Penemuan Topik
+            </div>
+          </div>
+          <div class="flex-auto border-t-2 transition duration-500 ease-in-out border-gray-300"></div>
+          <div class="flex items-center text-gray-500 relative">
+            <div class="rounded-full transition duration-500 ease-in-out h-5 w-5 border-2 border-gray-300"></div>
+            <div
+              class="absolute top-0 -ml-auto md:-ml-12 text-left md:text-center mt-10 w-auto md:w-32 text-xs font-regular text-gray-400">
+              Analisis Topik Konten
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="mt-10 w-full md:w-[600] m-auto" />
+
+    <div class="w-full md:w-[700] px-2 m-auto">
+      <div class="text-left pt-8 pl-3">
+        <h1 class="font-bold text-2xl mt-1">Pembersihan Data</h1>
+        <h1 class="mt-3 text-[#bdbdbd]">
+          Data yang sudah dikumpulkan perlu dibersihkan terlebih dahulu agar
+          optimal.
+        </h1>
+      </div>
+      <div class="row bg-white shadow-xl mt-8 p-5 rounded-2xl">
+        <div class="mt-3 px-4">
+          <label><span class="font-semibold text-md">Hasil Temuan Topik Sementara
+            </span>
+            <br />
+            <span class="text-[#7d7d7d] text-sm">Eits, tapi temuan ini masih butuh di-”cleaning” lebih dulu agar
+              hasil lebih optimal. Lakukan cleaning dengan menghapus beberapa
+              kata tidak penting pada gambar:
+            </span>
+            {% if refresh %}
+            <div role="status" class="space-y-8 animate-pulse md:space-y-0 md:space-x-8 md:flex md:items-center">
+              <div class="flex justify-center items-center w-full h-48 bg-gray-300 rounded sm:w-100 dark:bg-gray-700">
+                <svg class="w-12 h-12 text-gray-200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+                  fill="currentColor" viewBox="0 0 640 512">
+                  <path
+                    d="M480 80C480 35.82 515.8 0 560 0C604.2 0 640 35.82 640 80C640 124.2 604.2 160 560 160C515.8 160 480 124.2 480 80zM0 456.1C0 445.6 2.964 435.3 8.551 426.4L225.3 81.01C231.9 70.42 243.5 64 256 64C268.5 64 280.1 70.42 286.8 81.01L412.7 281.7L460.9 202.7C464.1 196.1 472.2 192 480 192C487.8 192 495 196.1 499.1 202.7L631.1 419.1C636.9 428.6 640 439.7 640 450.9C640 484.6 612.6 512 578.9 512H55.91C25.03 512 .0006 486.1 .0006 456.1L0 456.1z" />
+                </svg>
+              </div>
+            </div>
+            {% else %}
+            <img src="{{ wordcloud }}" class="w-full mt-4" alt="">
+            {% endif %}
+            <!-- <img src="images/Picture1.png" class="w-full mt-4" alt="" /> -->
+          </label>
+        </div>
+        <form method="post">
+        <div class="mt-8 px-4">
+          <label for="hapus"><span class="font-semibold text-md">Hapus Kata Tidak Penting
+            </span>
+            <br />
+            <span class="text-[#7d7d7d] text-sm">Bagian ini bisa langsung dilewati jika hasil temuan sudah tidak
+              perlu di-cleaning lagi.</span>
+            <textarea rows="4"
+              placeholder="Masukkan kata yang ingin di-”cleaning” dengan setiap kata ditambahkan petik satu dan dipisah menggunakan koma. Contoh: ‘yang’,’swipe’,’ya’"
+              class="placeholder-[#cdc6ff] mt-3 px-3 py-2 shadow rounded w-full block text-sm bg-[#e9e5ff]" required
+              name="hapus" {% if refresh %} disabled {% endif %}></textarea>
+          </label>
+        </div>
+        <div class="flex justify-center">
+          <button
+            class="mt-12 text-md font-semibold {% if index < 1 %} bg-[#C82179] text-white {% else %} text-[#C82179] {% endif %} px-14 py-3 border-2 border-[#C82179] block uppercase {% if index < 1 %} hover:text-white hover:bg-[#d92584] {% else %} hover:text-[#d92584] hover:bg-white {% endif %} hover:border-2 hover:border-[#d92584]"
+            type="submit"
+            {% if refresh %}disabled{% endif %}>
+            Lakukan data cleaning
+          </button>
+        </div>
+        </form>
+        <div class="flex justify-center pb-[20]">
+          <a href="{{topic_url}}">
+            <button
+              class="mt-5 text-md font-semibold border-2 {% if index < 1 %} border-gray-300 text-gray-400 {% else %} border-[#C82179] text-white {% endif %} px-[88px] py-3 block uppercase {% if index < 1 %} hover:text-gray-500 hover:border-gray-400 {% else %} hover:text-white bg-[#C82179] hover:bg-[#d92584] hover:border-[#d92584] {% endif %}"
+              type="submit" {% if refresh %}disabled{% endif %}
+              {% if index < 1 %}
+                disabled
+              {% endif %}
+              >
+              Dapatkan topik
+            </button>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://unpkg.com/flowbite@1.6.5/dist/flowbite.js"></script>
+</body>
+
+</html>
